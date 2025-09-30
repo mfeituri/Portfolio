@@ -1,87 +1,499 @@
----
-import "../styles/global.css";
-import { projects } from "../data/projects";
-const base = import.meta.env.BASE_URL;
----
-
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Mohamed Feituri – Portfolio</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  </head>
-  <body class="bg-white text-gray-900 font-sans scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mohamed Feituri - Portfolio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Fade-in on scroll */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
 
-    <!-- Nav -->
-    <nav class="flex justify-between items-center py-6 px-10 sticky top-0 bg-white/90 backdrop-blur z-50 shadow-sm">
-      <h1 class="text-xl font-bold">MF</h1>
-      <ul class="flex space-x-8 text-gray-700">
-        <li><a href="#about" class="hover:text-black transition">About</a></li>
-        <li><a href="#projects" class="hover:text-black transition">Projects</a></li>
-        <li><a href="#contact" class="hover:text-black transition">Contact</a></li>
-      </ul>
-    </nav>
+    /* Profile picture styling */
+    .profile-pic {
+      width: 14rem;
+      height: 14rem;
+      border-radius: 9999px;
+      object-fit: cover;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      border: 4px solid #7C3AED;
+      transition: transform 0.3s ease;
+    }
+    .profile-pic:hover {
+      transform: scale(1.05);
+    }
 
-    <!-- Hero -->
-    <section class="text-center py-28 px-6">
-      <img src={"selfie.jpg"} alt="Profile" class="w-32 h-32 rounded-full mx-auto mb-6 shadow-lg object-cover"/>
-      <h2 class="text-5xl font-bold mb-4">Mohamed Feituri</h2>
-      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-        B.S. Computer Science, Colorado School of Mines | Mobile Developer (iOS & Android) | Swift, SwiftUI, Kotlin, Jetpack Compose
-      </p>
-    </section>
+    /* App icons hover effect */
+    .icon-wrapper {
+      position: relative;
+      display: inline-block;
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+    .icon-wrapper::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(124,58,237,0));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .icon-wrapper:hover::before {
+      opacity: 1;
+    }
+    #app-icons img {
+      transition: transform 0.3s ease, opacity 0.7s ease;
+      cursor: pointer;
+    }
+    #app-icons img:hover {
+      transform: translateY(-5px) scale(1.1);
+    }
 
-    <!-- About -->
-    <section id="about" class="py-24 px-6 bg-gray-50">
-      <div class="max-w-3xl mx-auto text-center">
-        <h2 class="text-4xl font-bold mb-6">About Me</h2>
-<p class="text-lg text-gray-700 leading-relaxed">
-  I’m a mobile app developer skilled in iOS and Android development, pursuing a B.S. in Computer Science at the Colorado School of Mines. I enjoy building user-focused apps with SwiftUI, UIKit, and Jetpack Compose, emphasizing clean architecture and impactful experiences. My recent projects include a Spotify powered iOS app (Beanify), a TikTok style Android app (Whistle), and a mountain biking app developed for a client(SoGnar). I’ve worked across the full stack, from OAuth 2.0 authentication to Firebase and location features with MapKit/MapBox. I’m always eager to collaborate, learn, and push my skills in mobile development and product design.
-</p>
-      </div>
-    </section>
+    /* Navbar social icons */
+    .social-icons img {
+      width: 28px;
+      height: 28px;
+      margin-left: 0.75rem;
+      transition: transform 0.3s ease;
+    }
+    .social-icons img:hover {
+      transform: scale(1.2);
+    }
 
-    <!-- Projects -->
-    <section id="projects" class="py-24 px-6 bg-gray-50">
-      <h2 class="text-4xl font-bold text-center mb-12">Projects</h2>
-      <div class="grid md:grid-cols-3 gap-12 max-w-6xl mx-auto">
-        {projects.map(project => (
-          <a
-            href={project.link || "/projects/" + project.slug}
-            target="_blank"
-            class="group bg-white rounded-3xl shadow-md hover:shadow-xl transition overflow-hidden block"
-          >
-            <img
-              src={project.image}
-              class="w-full h-56 object-cover rounded-t-3xl"
-            />
-            <div class="p-6">
-              <h3 class="text-2xl font-semibold mb-2 group-hover:text-purple-500 transition">{project.title}</h3>
-              <p class="text-gray-600 mb-4">{project.description}</p>
-              <div class="flex flex-wrap gap-2">
-                {project.tech.map(tech => (
-                  <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">{tech}</span>
-                ))}
-              </div>
-            </div>
+    /* Embed PDF styling */
+    .resume-embed {
+      width: 100%;
+      height: 800px;
+      border: 2px solid #7C3AED;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    /* Project videos horizontal stack */
+    .project-videos {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      justify-content: flex-start;
+      padding-bottom: 1rem;
+      scrollbar-width: thin;
+      scrollbar-color: #7C3AED #E5E7EB;
+    }
+    .project-videos video {
+      flex-shrink: 0;
+      width: 220px;
+      height: auto;
+      border-radius: 0.75rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .project-videos::-webkit-scrollbar {
+      height: 8px;
+    }
+    .project-videos::-webkit-scrollbar-thumb {
+      background-color: #7C3AED;
+      border-radius: 9999px;
+    }
+    .project-videos::-webkit-scrollbar-track {
+      background-color: #E5E7EB;
+      border-radius: 9999px;
+    }
+
+    .project-separator {
+      width: 100%;
+      border-top: 2px solid #D1D5DB; /* light gray */
+      margin: 4rem 0; /* spacing between sections */
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-900 font-sans scroll-smooth">
+
+  <!-- NAVBAR -->
+  <header class="fixed top-0 left-0 w-full bg-white shadow z-50">
+    <nav class="max-w-6xl mx-auto flex justify-between items-center py-4 px-6">
+      <!-- Left side: Name + Socials -->
+      <div class="flex items-center space-x-4">
+        <a href="#" class="text-xl font-bold text-purple-600">Mohamed Feituri</a>
+        <div class="flex items-center space-x-3">
+          <a href="https://www.linkedin.com/in/mohamed-feituri/" target="_blank" class="flex items-center space-x-2 px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 transition">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn" class="w-5 h-5">
+            <span class="text-gray-800 font-medium">LinkedIn</span>
           </a>
-        ))}
+          <a href="https://github.com/mfeituri" target="_blank" class="flex items-center space-x-2 px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 transition">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub" class="w-5 h-5">
+            <span class="text-gray-800 font-medium">GitHub</span>
+          </a>
+        </div>
       </div>
+
+      <!-- Right side: Page links -->
+      <div class="flex items-center space-x-6">
+        <a href="#about" class="hover:text-purple-600">About</a>
+        <a href="#tabs" class="hover:text-purple-600" data-tab-target="projects">Projects</a>
+        <a href="#tabs" class="hover:text-purple-600" data-tab-target="resume-work">Work</a>
+        <a href="#contact" class="hover:text-purple-600" data-tab-target="contact">Contact</a>  
+      </div>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="flex flex-col justify-center items-center text-center bg-gradient-to-b from-purple-50 to-white px-6 pt-24 pb-12">
+    <img src="selfie.jpg" alt="Mohamed Feituri" class="profile-pic fade-in mb-4">
+    <h1 class="text-5xl font-bold mb-3 fade-in">Hi, I’m Mohamed</h1>
+    <p class="text-lg text-gray-700 mb-6 max-w-2xl fade-in">
+     B.S. Computer Science, Colorado School of Mines | Mobile Developer (iOS & Android) | Swift, SwiftUI, Kotlin, Jetpack Compose
+    <div class="flex gap-6 mb-6" id="app-icons">
+      <div class="icon-wrapper"><img data-target="Whistle" src="whistleLogo.png" alt="Whistle" class="w-16 h-16 rounded-lg shadow-lg opacity-0 transform translate-y-6"></div>
+      <div class="icon-wrapper"><img data-target="Beanify" src="bean.png" alt="Beanify" class="w-16 h-16 rounded-lg shadow-lg opacity-0 transform translate-y-6"></div>
+      <div class="icon-wrapper"><img data-target="SoGnar" src="sognarLogo.png" alt="SoGnar" class="w-16 h-16 rounded-lg shadow-lg opacity-0 transform translate-y-6"></div>
+    </div>
+
+
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="py-20 max-w-4xl mx-auto px-6">
+    <h2 class="text-3xl font-semibold mb-6 text-center fade-in">About Me</h2>
+   <p class="text-gray-700 text-lg text-center leading-relaxed fade-in">
+  I’m a mobile app developer with a strong foundation in both iOS and Android development, currently pursuing a B.S. in Computer Science at the Colorado School of Mines. I enjoy building user-focused apps using SwiftUI, UIKit, and Jetpack Compose, with a passion for clean architecture, reactive design, and impactful user experiences.  
+
+  My recent projects include a Spotify-powered iOS app (Beanify), a TikTok-style Android app (Whistle), and leading the development of a mountain biking app for a client through my university field session. I’ve worked across the full stack of mobile development, from secure OAuth 2.0 authentication to integrating APIs, Firebase, and MapKit/MapBox for location-aware features.  
+
+  When I’m not building apps, I enjoy working out, hiking, diving into video games, and reading to keep learning and relaxing. I’m always looking to collaborate, grow my skills, and create technology that improves daily life!
+</p>
+
+  </section>
+
+  <!-- TABS -->
+  <section id="tabs" class="py-20">
+    <div class="max-w-6xl mx-auto px-6">
+      <!-- Tab Buttons -->
+      <div class="flex justify-center space-x-4 border-b-2 border-gray-200">
+        <button class="tab-btn px-4 py-2 font-medium text-purple-600 border-b-2 border-purple-600" data-tab="projects">Projects</button>
+        <button class="tab-btn px-4 py-2 font-medium text-gray-600 hover:text-purple-600" data-tab="resume-work">Resume & Work</button>
+        <button class="tab-btn px-4 py-2 font-medium text-gray-600 hover:text-purple-600" data-tab="contact">Contact</button>
+      </div>
+
+      <!-- Tab Content -->
+      <div id="tab-content" class="mt-8">
+        <!-- Projects Tab -->
+        <div id="projects-tab">
+   
+
+              <!-- WHISTLE -->
+              <section id="Whistle" class="flex flex-col items-center gap-6 fade-in mb-16">
+                <img src="whistleLogo.png" alt="Whistle Icon" class="w-36 h-36 rounded-xl shadow-lg mb-4">
+                <h3 class="text-2xl font-bold mb-2 text-center">Whistle</h3>
+                <p class="text-gray-700 mb-4 max-w-3xl text-center">
+                  TikTok-style Android app built with Kotlin, Jetpack Compose, and Firebase. Features include scrolling feed, likes, user profiles, and Cloudinary-hosted media.
+                </p>
+                <div class="flex flex-wrap gap-2 mb-4 justify-center">
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Kotlin</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Jetpack Compose</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Firebase</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Cloudinary</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">MVVM</span>
+                </div>
+                <div class="project-videos w-full">
+                  <div class="flex flex-col items-center mr-6">
+                    <p class="text-center mb-2 font-medium">Scrolling feed (Jetpack Compose)</p>
+                    <video src="feed.mp4" autoplay muted loop playsinline class="mb-4"></video>
+                  </div>
+                  <div class="flex flex-col items-center mr-6">
+                    <p class="text-center mb-2 font-medium">Likes functionality (Firebase Firestore)</p>
+                    <video src="likes.mp4" autoplay muted loop playsinline class="mb-4"></video>
+                  </div>
+                  <div class="flex flex-col items-center mr-6">
+                    <p class="text-center mb-2 font-medium">Video upload (Camera API + Cloudinary)</p>
+                    <video src="upload1.mp4" autoplay muted loop playsinline class="mb-4"></video>
+                  </div>
+                  <div class="flex flex-col items-center mr-6">
+                    <p class="text-center mb-2 font-medium">User profiles (Firebase Authentication + Firestore)</p>
+                    <video src="profile.mp4" autoplay muted loop playsinline class="mb-4"></video>
+                  </div>
+                </div>
+                <a href="https://mfeituri.github.io/whistle-site/" target="_blank" class="px-5 py-2 rounded-xl bg-purple-600 text-white hover:opacity-90 mt-4 inline-block">
+                  View Project Website
+                </a>
+              </section>
+
+              <!-- BEANIFY -->
+              <div class="project-separator"></div>
+              <section id="Beanify" class="flex flex-col items-center gap-6 fade-in mb-16">
+                <img src="bean.png" alt="Beanify Icon" class="w-36 h-36 rounded-xl shadow-lg mb-4">
+                <h3 class="text-2xl font-bold mb-2 text-center">Beanify</h3>
+                <p class="text-gray-700 mb-4 max-w-3xl text-center">
+                  iOS app built with SwiftUI and Liquid Glass, using the Spotify API to create a dashboard of your top tracks and artists, plus a visual breakdown of your top music genres.
+                </p>
+                <div class="flex flex-wrap gap-2 mb-4 justify-center">
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Swift</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">SwiftUI</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Spotify API</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Liquid Glass</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Charts</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">MVVM</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Combine</span>
+                </div>
+
+                <div class="project-videos w-full flex flex-wrap justify-center gap-4">
+                  <div class="flex flex-col justify-start items-center flex-shrink-0 w-64">
+                    <p class="text-center mb-1 font-medium text-sm h-10">
+                      Authentication (Spotify PKCE)
+                    </p>
+                    <video src="Login.mov" autoplay muted loop playsinline class="w-full h-56 object-cover rounded-lg shadow-md"></video>
+                  </div>
+                  <div class="flex flex-col justify-start items-center flex-shrink-0 w-64">
+                    <p class="text-center mb-1 font-medium text-sm h-10">
+                      Top Tracks & Top Artists (Spotify API, selectable time frame)
+                    </p>
+                    <video src="Tracks.mov" autoplay muted loop playsinline class="w-full h-56 object-cover rounded-lg shadow-md"></video>
+                  </div>
+                  <div class="flex flex-col justify-start items-center flex-shrink-0 w-64">
+                    <p class="text-center mb-1 font-medium text-sm h-10">
+                      Top Genres (Pie Chart Visualization)
+                    </p>
+                    <video src="pie.mov" autoplay muted loop playsinline class="w-full h-56 object-cover rounded-lg shadow-md"></video>
+                  </div>
+                  <div class="flex flex-col justify-start items-center flex-shrink-0 w-64">
+                    <p class="text-center mb-1 font-medium text-sm h-10">
+                      Profile Screen (Spotify Profile Link + Logout)
+                    </p>
+                    <video src="profileBean.mov" autoplay muted loop playsinline class="w-full h-56 object-cover rounded-lg shadow-md"></video>
+                  </div>
+                </div>
+                <a href="https://github.com/mfeituri/beanify" target="_blank" class="px-5 py-2 rounded-xl bg-purple-600 text-white hover:bg-gray-700 mt-4 inline-block">
+                  View on GitHub
+                </a>
+              </section>
+
+              <!-- SOGNAR -->
+              <div class="project-separator"></div>
+              <section id="SoGnar" class="flex flex-col items-center gap-6 fade-in mb-16">
+                <img src="sognarLogo.png" alt="SoGnar Icon" class="w-36 h-36 rounded-xl shadow-lg mb-4">
+                <h3 class="text-2xl font-bold mb-2 text-center">SoGnar</h3>
+                <p class="text-gray-700 mb-4 max-w-3xl text-center">
+                  Work in progress GPS tracking and theft alert app for a client, featuring Firebase Authentication with Google Sign-In and Mapbox API integration. Future updates will include a Godot-powered mini game and ride tracking features.
+                </p>
+                <div class="flex gap-2 mb-4 justify-center flex-wrap">
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Swift</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">SwiftUI</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Firebase Auth</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Google Sign-In</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Mapbox</span>
+                  <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">Godot</span>
+                </div>
+                <div class="project-videos w-full flex">
+                  <div class="flex-1"></div>
+                  <div class="flex flex-col items-center">
+                    <p class="text-center mb-2 font-medium text-sm">Current progress demo</p>
+                    <video src="Demo.mp4" autoplay muted loop playsinline class="max-w-md w-full h-56 object-cover rounded-lg shadow-md"></video>
+                  </div>
+                  <div class="flex-1"></div>
+                </div>
+              </section>
+            </div>
+          </section>
+        </div>
+
+   <!-- WORK EXPERIENCE -->
+
+<section id="resume-work-tab" class="pt-8 pb-20 max-w-6xl mx-auto px-6 hidden">
+  <h2 class="text-3xl font-semibold mb-12 text-center fade-in">Work Experience</h2>
+
+  
+
+      <!-- Resume Download Link -->
+  <div class="text-center mt-8">
+    <a href="resume.pdf" target="_blank" class="px-6 py-3 rounded-xl bg-purple-600 text-white hover:bg-purple-700">
+      Download My Resume
+    </a>
+  </div>
+  <div class="mt-12">
+    <section class="flex flex-col items-start gap-4 fade-in mb-12">
+      <h3 class="text-2xl font-bold">Education</h3>
+      <p class="text-gray-600">Colorado School of Mines | B.S. Computer Science</p>
+      <p class="text-gray-600">Expected Graduation: December 2025</p>
     </section>
 
-<!-- Contact -->
-<section id="contact" class="py-24 px-6 bg-gray-50 text-center">
-  <h2 class="text-4xl font-bold mb-6">Get In Touch</h2>
-  <p class="text-lg text-gray-700 mb-8">I’m always open to opportunities in mobile development or just to chat!</p>
-  <a href="https://www.linkedin.com/in/mohamed-feituri/" target="_blank" 
-     class="bg-blue-600 text-white px-8 py-4 rounded-xl text-lg hover:bg-blue-700 transition">
-    Connect on LinkedIn
-  </a>
+  
+
+  <!-- SoGnar -->
+  <section class="flex flex-col items-start gap-4 fade-in mb-12">
+    <h3 class="text-2xl font-bold">SoGnar Mountain Biking App (Field session) | iOS Developer</h3>
+    <p class="text-gray-600">Golden, CO | 08/2025 – Present</p>
+    <ul class="list-disc list-inside text-gray-700 space-y-1">
+      <li>Leading development of a client-facing iOS app from the ground up, focused on GPS ride tracking, route visualization, and rider profiles.</li>
+      <li>Managing version control, sprint planning, and code reviews to ensure smooth team collaboration.</li>
+      <li>Collaborating with stakeholders on UI/UX to deliver a minimal, user-friendly design while planning gamification features (achievements, leaderboards).</li>
+      <li>Designing the app architecture using MVVM and SwiftUI for scalability and clean code practices, guided by Clean Architecture (Robert C. Martin) and usability principles from Don’t Make Me Think (Steve Krug).</li>
+      <li>Building interactive map features with MapBox/MapKit, including ride logging, route overlays, and offline support.</li>
+    </ul>
+  </section>
+
+  <!-- Capstone -->
+  <section class="flex flex-col items-start gap-4 fade-in mb-12">
+    <h3 class="text-2xl font-bold">Capstone Development Partners, LLC | Project Management Intern</h3>
+    <p class="text-gray-600">Golden, CO | Jun 2024 – Aug 2024</p>
+    <ul class="list-disc list-inside text-gray-700 space-y-1">
+      <li>Gained hands-on experience in managing project timelines, deliverables, and milestones, developing strong organizational and time-management skills.</li>
+      <li>Participated in meetings with stakeholders, learning how to translate business goals into actionable plans and priorities.</li>
+      <li>Conducted risk assessments by identifying potential project delays and proposing mitigation strategies to ensure on-time delivery.</li>
+      <li>Created visual reports and dashboards to present key project metrics to stakeholders, enhancing decision-making processes.</li>
+    </ul>
+  </section>
+
+  <!-- Gusto -->
+  <section class="flex flex-col items-start gap-4 fade-in mb-12">
+    <h3 class="text-2xl font-bold">Gusto | Member Operations Specialist</h3>
+    <p class="text-gray-600">Remote | Aug 2022 – Oct 2023</p>
+    <ul class="list-disc list-inside text-gray-700 space-y-1">
+      <li>Ensured error-free health insurance enrollments for employees, managing error reporting and conducting audits.</li>
+      <li>Coordinated and streamlined processes for seamless team operations.</li>
+      <li>Assisted in program management initiatives to optimize workflow and compliance.</li>
+    </ul>
+  </section>
+
+  <!-- Apex -->
+  <section class="flex flex-col items-start gap-4 fade-in mb-12">
+    <h3 class="text-2xl font-bold">Apex Systems | IT Specialist</h3>
+    <p class="text-gray-600">Remote | Feb 2022 – Jul 2022</p>
+    <ul class="list-disc list-inside text-gray-700 space-y-1">
+      <li>Facilitated navigation through Boeing’s systems, helping employees use platforms efficiently.</li>
+      <li>Assisted users in crafting solutions tailored to their needs and ensured smooth workflow.</li>
+      <li>Developed understanding of complex IT infrastructures and guided users effectively.</li>
+    </ul>
+  </section>
+
+  <!-- Nordstrom -->
+  <section class="flex flex-col items-start gap-4 fade-in mb-12">
+    <h3 class="text-2xl font-bold">Nordstrom | Online Support Specialist</h3>
+    <p class="text-gray-600">Remote | Apr 2021 – Jul 2021</p>
+    <ul class="list-disc list-inside text-gray-700 space-y-1">
+      <li>Provided technical support for Nordstrom.com, troubleshooting website and package issues.</li>
+      <li>Handled billing inquiries and sensitive customer information with high professionalism.</li>
+      <li>Ensured smooth online shopping experience and timely resolution of customer issues.</li>
+    </ul>
+
+
+
+  </section>
 </section>
 
-    <!-- Footer -->
-    <footer class="py-10 text-center text-gray-500 text-sm border-t">
-      © 2025 Mohamed Feituri. All rights reserved.
-    </footer>
-  </body>
+
+<!-- Contact Tab -->
+<div id="contact-tab" class="hidden">
+  <section id="contact" class="py-20 max-w-4xl mx-auto px-6 text-center">
+    
+    <!-- Profile Picture -->
+    <img src="me.png" alt="Mohamed Feituri" class="w-32 h-32 md:w-40 md:h-40 rounded-full mx-auto mb-6 shadow-lg fade-in object-cover border-4 border-purple-600">
+
+    <h2 class="text-3xl font-semibold mb-6 fade-in">Get In Touch</h2>
+    <p class="text-gray-700 mb-6 fade-in">
+      Whether you’re looking to collaborate, hire, or just chat, I’d love to hear from you!  
+      Feel free to reach out via email or connect with me on LinkedIn and GitHub.
+    </p>
+
+    <!-- Email Button -->
+    <a href="mailto:mfeituri@mines.edu" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition-all fade-in mb-6 mx-auto max-w-xs">
+      <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/mail-dot-ru.svg" alt="Email" class="w-5 h-5">
+      Say Hello
+    </a>
+
+    <!-- Social Buttons -->
+    <div class="flex justify-center gap-4 mt-4 flex-wrap">
+      <a href="https://www.linkedin.com/in/mohamed-feituri/" target="_blank" class="flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all">
+        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn" class="w-5 h-5">
+        LinkedIn
+      </a>
+      <a href="https://github.com/mfeituri" target="_blank" class="flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-800 text-white hover:bg-gray-900 transition-all">
+        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub" class="w-5 h-5">
+        GitHub
+      </a>
+    </div>
+
+    <!-- Optional: Short friendly closing line -->
+    <p class="text-gray-500 mt-8 fade-in text-sm">
+      I typically respond within 1–2 business days.
+    </p>
+  </section>
+</div>
+
+
+
+
+  <!-- FOOTER -->
+  <footer class="py-6 bg-gray-100 text-center text-gray-600 fade-in">
+    © 2025 Mohamed Feituri. All rights reserved.
+  </footer>
+
+  <script>
+    // Fade-in on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    document.querySelectorAll(".fade-in").forEach(el => observer.observe(el));
+
+    // App icons fade-in and scroll to project
+    const icons = document.querySelectorAll("#app-icons img");
+    icons.forEach((icon, index) => {
+      setTimeout(() => {
+        icon.classList.remove("opacity-0", "translate-y-6");
+        icon.classList.add("transition-transform", "duration-700", "ease-out", "opacity-100");
+      }, index * 200);
+
+      icon.addEventListener("click", () => {
+        const targetId = icon.dataset.target;
+        const targetEl = document.getElementById(targetId);
+        if(targetEl) targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
+    // TAB SWITCHING
+    const tabs = document.querySelectorAll(".tab-btn");
+    const projectsTab = document.getElementById("projects-tab");
+    const resumeWorkTab = document.getElementById("resume-work-tab");
+    const contactTab = document.getElementById("contact-tab");
+
+ tabs.forEach(tab => {
+  tab.addEventListener("click", () => {
+    tabs.forEach(t => {
+      t.classList.remove("text-purple-600", "border-purple-600");
+      t.classList.add("text-gray-600");
+    });
+    projectsTab.classList.add("hidden");
+    resumeWorkTab.classList.add("hidden");
+    contactTab.classList.add("hidden");
+
+    const tabName = tab.dataset.tab;
+    if(tabName === "projects") projectsTab.classList.remove("hidden");
+    if(tabName === "resume-work") resumeWorkTab.classList.remove("hidden");
+    if(tabName === "contact") contactTab.classList.remove("hidden");
+
+    tab.classList.add("text-purple-600", "border-purple-600");
+  });
+});
+
+// --- ADD THIS ---
+document.querySelectorAll('a[data-tab-target]').forEach(link => {
+  link.addEventListener('click', e => {
+    const tabName = link.dataset.tabTarget;
+    const tabBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+    if(tabBtn) tabBtn.click(); // Simulate clicking the corresponding tab
+  });
+});
+
+  </script>
+</body>
 </html>
